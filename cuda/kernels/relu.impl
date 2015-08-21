@@ -1,0 +1,34 @@
+#define RELU_BOUNDS_AND_INDEX \
+  int idx = threadIdx.x + blockIdx.x * blockDim.x; \
+  if (idx >= len) \
+    return
+
+template <typename T>
+__device__ void relu_forward(T *data, int len) {
+  RELU_BOUNDS_AND_INDEX;
+  data[idx] = max(data[idx], static_cast<T>(0));
+}
+
+template <typename T>
+__device__ void relu_backward(T *data, T *gradient, int len) {
+  RELU_BOUNDS_AND_INDEX;
+  gradient[idx] *= data[idx] > 0;
+}
+
+extern "C" {
+  __global__ void relu_forward_float(float *data, int len) {
+    relu_forward(data, len);
+  }
+  __global__ void relu_forward_double(double *data, int len) {
+    relu_forward(data, len);
+  }
+
+  __global__ void relu_backward_float(float *data, float *gradient, int len) {
+    relu_backward(data, gradient, len);
+  }
+  __global__ void relu_backward_double(double *data, double *gradient, int len) {
+    relu_backward(data, gradient, len);
+  }
+}
+
+// vim: ft=cuda
